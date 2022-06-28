@@ -60,7 +60,26 @@ export function getCodeImg() {
   })
 }
 
-// 获取系统的集团配置参数
+
+/**
+ * 通过euaf平台clientCode，换取euaf平台clientId
+ * @param {string} clientCode  // euaf平台客户端code
+ * getClientId
+ *
+ */
+ export function getClientId(clientCode) {
+  return request({
+    url: `/system/client/getClientId/${clientCode}`,
+    method: 'get'
+  })
+}
+
+/**
+ * 获取系统的集团配置参数，使用euaf平台clientId，获取集团账户中心相关参数
+ * @param {string} clientId  // euaf平台clientId
+ * lodeLogin
+ *
+ */
 export function getGroupParam(clientId, grantCode) {
   return request({
     url: 'system/client/getHaierAuthConfig/' + clientId + '/' + grantCode,
@@ -68,10 +87,16 @@ export function getGroupParam(clientId, grantCode) {
   })
 }
 
-// 使用code换取登录参数
-export function lodeLogin(appClientId, code, loginType) {
+/**
+ * 获取集团access_token
+ * 使用clientId，code换取登录参数，获取用户登录token凭据
+ * @param {string} clientId  // euaf平台clientId
+ * lodeLogin
+ *
+ */
+export function lodeLogin(clientId, code, loginType) {
   return request({
-    url: 'auth/haierLogin/' + appClientId + '/' + loginType + '?code='+ code,
+    url: 'auth/haierLogin/' + clientId + '/' + loginType + '?code='+ code,
     method: 'get'
   })
 }

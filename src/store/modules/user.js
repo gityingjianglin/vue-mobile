@@ -1,7 +1,7 @@
-import { login, logout, getInfo, refreshToken, getGroupParam, lodeLogin } from '@/api/login'
+import { login, logout, getInfo, refreshToken, getGroupParam, lodeLogin, getClientId } from '@/api/login'
 import { getToken, setToken, setExpiresIn, removeToken } from '@/utils/auth'
 import config from '@/config/config'
-import { getRedirectUrl } from '@/utils/userCenter'
+import { getRedirectUrl, getKeyWithNamespace } from '@/utils/userCenter'
 
 const user = {
   state: {
@@ -129,29 +129,38 @@ const user = {
      * login
      *
      */
-    userCenter({commit,state}) {
+     userCenter({commit,state}) {
       // 调用后端接口（clientId+grantCode(写死 haier_auth)）接口调用成功之后配置集团统一账号中心
       return new Promise((resolve, reject) => {
-        // TODO
-        getGroupParam(config.clientId, 'haier_auth').then(res => {
-          if (res.data) {
-            commit('SET_APPCLIENTID', res.data.clientId)
-            let redirectUri = getRedirectUrl(res)
-            localStorage.setItem('appClientId', res.data.clientId)
-            localStorage.setItem('redirectUrl', redirectUri)
-            localStorage.setItem('hostName', res.data.ssoUrl)
-            resolve(res)
-          }else {
-            reject('/nullParams')
+        // 通过euaf平台clientCode，获取euaf平台clientId
+        getClientId(config.clientCode).then((data) => {
+          if (data.code === 200) {
+            let clientId = data.data.clientId // euaf平台clientId
+            localStorage.setItem(getKeyWithNamespace('clientId'), clientId)
+            getGroupParam(clientId, 'haier_auth').then(res => {
+              if (res.data) {
+                // 集团账户中心clientId
+                commit('SET_APPCLIENTID', res.data.clientId)
+                let redirectUri = getRedirectUrl(res)
+                // 存储集团账户中心clientId到本地缓存appClientId
+                localStorage.setItem(getKeyWithNamespace('appClientId'), res.data.clientId)
+                localStorage.setItem(getKeyWithNamespace('redirectUrl'), redirectUri)
+                localStorage.setItem(getKeyWithNamespace('hostName'), res.data.ssoUrl)
+                resolve(res)
+              }else {
+                reject('/nullParams')
+              }
+            })
           }
         })
       })
-
     },
     codeLogin({ commit,state }, data) {
       debugger
       return new Promise((resolve, reject) => {
-        lodeLogin(config.clientId, data.code, state.loginType).then(res => {
+        // 使用euaf平台clientId获取集团账户中心access_token
+        let clientId = localStorage.getItem(getKeyWithNamespace('clientId'))
+        lodeLogin(clientId, data.code, state.loginType).then(res => {
           let data = res.data
           setToken(data.access_token)
           commit('SET_TOKEN', data.access_token)
