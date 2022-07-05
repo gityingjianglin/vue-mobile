@@ -31,9 +31,11 @@ pipeline {
       TAG_NAME = createTag()
       
       // 工程的git仓库克隆地址，注意去掉'http://'
-      GIT_CLONE_URL = 'http://git.haierfintech.xin/digital-manage/fin-platform/mobile-finplatform.git'
+      GIT_CLONE_URL = 'git.haierfintech.xin/smart-medical/kangyang/3d-model/admin-modelview.git'
       // 应用名称，取git仓库的项目标识串
-      APP_NAME = 'mobile-finplatform'
+      APP_NAME = 'admin-modelview'
+      // 在paas平台devops工程里面创建项目同名凭证，凭证保存的是sonarqube的token，需提前找运维在sonarQube创建项目和token
+      SONAR_CREDENTIAL_ID = 'admin-modelview'
   }
 
   stages {
