@@ -1,13 +1,26 @@
+/*
+ * @Author: yingjianglin
+ * @Date: 2022-06-23 09:43:01
+ * @LastEditors: yingjianglin
+ * @LastEditTime: 2022-07-05 11:49:52
+ * @Description: 
+ * 
+ */
 import Cookies from 'js-cookie'
+import config from '@/config/config'
 
-const TokenKey = 'Admin-Token'
+const TokenKey = config.namespace + '-Token'
 
 const ExpiresInKey = 'Admin-Expires-In'
 
 export function getToken() {
   return Cookies.get(TokenKey)
 }
-
+/**
+ * @description: 设置token到cookies中
+ * @param {string} token 
+ * @return {*}
+ */
 export function setToken(token) {
   return Cookies.set(TokenKey, token)
 }
