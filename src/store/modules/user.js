@@ -122,6 +122,7 @@ const user = {
         resolve()
       })
     },
+    
     // 配置集团统一登录,调用后端接口获取，cliendtId，tokenUrl是获取当前域名拼接
     /**
      * configUserCenter
