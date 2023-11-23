@@ -1,7 +1,8 @@
-import { login, logout, getInfo, refreshToken, getGroupParam, lodeLogin, getClientId } from '@/api/login'
+import { login, logout, getInfo, refreshToken, getGroupParam, lodeLogin, getClientId, haierAccountInfo } from '@/api/login'
 import { getToken, setToken, setExpiresIn, removeToken } from '@/utils/auth'
 import config from '@/config/config'
 import { getRedirectUrl, getKeyWithNamespace } from '@/utils/userCenter'
+import { getStore, setStore, removeStore } from '@/utils/storage'
 
 const user = {
   state: {
@@ -35,6 +36,9 @@ const user = {
     },
     SET_PERMISSIONS: (state, permissions) => {
       state.permissions = permissions
+    },
+    SET_APPCLIENTID: (state, clientId) => {
+      state.clientId = clientId
     }
   },
 
@@ -102,6 +106,8 @@ const user = {
           commit('SET_TOKEN', '')
           commit('SET_ROLES', [])
           commit('SET_PERMISSIONS', [])
+          commit('SET_NAME','')
+          localStorage.removeItem(getKeyWithNamespace('nickName'))
           localStorage.removeItem(getKeyWithNamespace('clientId'))
           localStorage.removeItem(getKeyWithNamespace('appClientId'))
           localStorage.removeItem(getKeyWithNamespace('redirectUrl'))
@@ -184,6 +190,29 @@ const user = {
           console.log(error,error.toString());
           let errorMessage = error.toString().slice(7)
           localStorage.setItem('errorMessage',errorMessage)
+        })
+      })
+    },
+    // 集团token换取euaf业务token
+    getUserInfo({ commit }, userInfo){
+      return new Promise((resolve, reject) => {
+        let params = {
+          clientId: getStore(getKeyWithNamespace('clientId')),
+          grantCode: 'haier_auth'
+        }
+        haierAccountInfo(params).then(res => {
+          console.log('???/',res);
+          commit('SET_NAME', res.data.nick_name)
+          setStore(getKeyWithNamespace('nickName'),res.data.nick_name)
+          setStore(getKeyWithNamespace('userName'),res.data.user_name)
+          localStorage.removeItem('exitInfo')
+          setToken(res.data.access_token)
+          commit('SET_TOKEN', res.data.access_token)
+          setExpiresIn(res.data.expires_in)
+          commit('SET_EXPIRES_IN', res.data.expires_in)
+          resolve(res)
+        }).catch(err => {
+          reject(err)
         })
       })
     }

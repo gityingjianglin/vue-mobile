@@ -33,44 +33,58 @@ export const getRedirectUrl = (res) => {
   return redirectUrl
 }
 
-export const outLogin = () => {
+export const outLogin = (val) => {
   store.dispatch('userCenter').then(res => {
-    let redirectUrl = getRedirectUrl(res)
-    let hostName = res.data.ssoUrl
     let appClientId = res.data.clientId
-    console.log(appClientId,localStorage.getItem(_getKeyWithNamespace('appClientId')));
-    store.dispatch('LogOut').then(res => {
-      window.location.href = `${hostName}/?client_id=${appClientId}&redirect_uri=${redirectUrl}#exit`
+    console.log(appClientId,localStorage.getItem(_getKeyWithNamespace('appClientId')),window.location.href);
+    store.dispatch('LogOut').then(outRes => {
+      console.log(outRes, '登出成功');
+      window.__USERCENTER__.configUserCenter({
+        clientId: res.data.clientId,
+        ssoUrl: res.data.ssoUrl,
+        appId: res.data.appId || '',
+        tokenUrl: res.data.tokenUrl,
+        // redirectUri: 'http://127.0.0.1:80'
+      });
+      window.__USERCENTER__.logout().then(res => {
+        console.log(res);
+      }).catch(err => {
+        console.log(err,'err');
+      })
     })
   })
 }
-
-export const checkUserCenterLogin = (next, to, from) => {
-  let code = getQueryString('code')
-  if (!code) {
+export const checkUserCenterLogin = () => {
+  console.log("11111111");
+  return new Promise((resolve,reject) => {
+    localStorage.removeItem('haier-user-center-access-token')
     store.dispatch('userCenter').then(res => {
       console.log(res, 'userCenter');
-      let redirect_url = getRedirectUrl(res)
-      redirect_url = encodeURIComponent(window.location.href)
-      let hostName = res.data.ssoUrl
-      let appClientId = res.data.clientId
-      window.location.href = `${hostName}/?response_type=code&client_id=${appClientId}&redirect_uri=${redirect_url}&state=#login`
+      window.__USERCENTER__.configUserCenter({
+        clientId: res.data.clientId,
+        ssoUrl: res.data.ssoUrl,
+        appId: res.data.appId || '',
+        tokenUrl: res.data.tokenUrl,
+        // redirectUri: window.location.href
+        // redirectUri: 'https://www.baidu.com'
+      })
+      window.__USERCENTER__.login().then(res => {
+        console.log('登录成功', res);
+        if (res.success) {
+          store.dispatch('getUserInfo').then(res => {
+            if(res.code === 200) {
+              resolve()
+            }
+          }).catch(err => {
+            reject(err)
+          })
+        }
+      }).catch(err => {
+        reject()
+        console.log('登陆失败', err);
+      })
     })
-  } else {
-    // 登录成功获取到code;
-    let code = getQueryString('code')
-    console.log(code)
-    store.dispatch('codeLogin', {code:code}).then(res => {
-      console.log('to')
-      console.log(to)
-      console.log('from')
-      console.log(from)
-      next()
-    }).catch (err => {
-      console.log(err, 'err');
-      next({ path: "/401" })
-    })
-  }
+  })
 }
 
 export const getKeyWithNamespace = _getKeyWithNamespace

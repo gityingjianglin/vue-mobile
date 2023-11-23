@@ -87,13 +87,14 @@ export function getGroupParam(clientId, grantCode) {
   })
 }
 
-/**
- * 获取集团access_token
- * 使用clientId，code换取登录参数，获取用户登录token凭据
- * @param {string} clientId  // euaf平台clientId
- * lodeLogin
- *
- */
+// 获取项目EUAFtoken
+export function haierAccountInfo(params, opts) {
+  return request({
+    url: `/auth/haierAccountInfo/${params.clientId}/${params.grantCode}`,
+    method: 'get'
+  })
+}
+
 export function lodeLogin(clientId, code, loginType) {
   return request({
     url: 'auth/haierLogin/' + clientId + '/' + loginType + '?code='+ code,

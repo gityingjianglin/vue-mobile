@@ -27,8 +27,10 @@ Object.keys(filters).forEach(key => {
 
 Vue.config.productionTip = false
 
-new Vue({
+let rootVue = new Vue({
   router,
   store,
   render: h => h(App),
 }).$mount('#app')
+
+export default rootVue

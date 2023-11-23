@@ -64,7 +64,7 @@ let router = new Router({
   ]
 })
 
-router.beforeEach((to, from, next) => {
+/* router.beforeEach((to, from, next) => {
   if (getToken() || to.name === '401') {
     // token存在或者401路由无权限，可直接访问
     next()
@@ -72,6 +72,54 @@ router.beforeEach((to, from, next) => {
     if (config.openUserCenter) {
       // 账户中心对接开启，进行集团账户对接
       checkUserCenterLogin(next)
+    } else {
+      next()
+    }
+  }
+  if (to.meta.title) {
+    document.title = to.meta.title
+  }
+}) */
+const whiteList = ['/401']
+function noToken(next, to) {
+  console.log('没有token111111111111111111111111111')
+  checkUserCenterLogin().then(() => {
+    next()
+  }, () => {
+    next({
+      path: '/401'
+    })
+  })
+}
+router.beforeEach((to, from, next) => {
+  // 兼容Ihaier
+  let isIhaier = /Lark/.test(navigator.userAgent)
+  localStorage.setItem('client_userAgent', isIhaier)
+  if ((to.name ===  '401' || (to.matched[0] && to.matched[0].path.slice(1)) === '401') && to.query.code) {
+    next({
+      path: '/'
+    })
+  }
+  if (getToken()) {
+    // token存在可直接访问
+    next()
+  } else {
+    if (whiteList.indexOf(to.path) !== -1) {
+      next()
+    } else if (config.openUserCenter) {
+      // 账户中心对接开启，进行集团账户对接
+      if (isIhaier) {
+        if (to.path !== '/home') {
+          next({
+            path: '/home'
+          })
+        } else {
+          next()
+          noToken(next, to)
+        }
+      } else {
+        noToken(next, to)
+      }
     } else {
       next()
     }
